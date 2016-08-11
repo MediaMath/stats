@@ -6,22 +6,24 @@ import (
 	"runtime"
 	"sync/atomic"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
 var running int32
 
 //ReportRuntimeStats publishes runtime stats to statsd
-func ReportRuntimeStats(sleep time.Duration, done <-chan struct{}) error {
+func ReportRuntimeStats(ctx context.Context, sleep time.Duration) error {
 	if !atomic.CompareAndSwapInt32(&running, 0, 1) {
 		return fmt.Errorf("runtime stats are already running")
 	}
 
 	log.Printf("Updating runtime stats every: %v", sleep)
-	go sendMemStats(sleep, done)
+	go sendMemStats(ctx, sleep)
 	return nil
 }
 
-func sendMemStats(sleep time.Duration, stopChan <-chan struct{}) {
+func sendMemStats(ctx context.Context, sleep time.Duration) {
 	var lastPauseNs uint64
 	var lastNumGc uint32
 
@@ -89,7 +91,7 @@ func sendMemStats(sleep time.Duration, stopChan <-chan struct{}) {
 
 			lastNumGc = memStats.NumGC
 			lastSampleTime = now
-		case <-stopChan:
+		case <-ctx.Done():
 			return
 		}
 	}

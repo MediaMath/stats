@@ -91,7 +91,7 @@ func RegisterRuntimeStatsContext(ctx context.Context) error {
 		return fmt.Errorf("No runtime interval not reporting runtime stats")
 	}
 
-	return ReportRuntimeStats(interval, ctx.Done())
+	return ReportRuntimeStats(ctx, interval)
 }
 
 func getString(ctx context.Context, key key, def string) string {
