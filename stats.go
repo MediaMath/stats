@@ -2,7 +2,6 @@ package stats
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/MediaMath/govent/graphite"
@@ -94,7 +93,6 @@ func (s Broker) Start(ctx context.Context) {
 	go func() {
 		endpoints := []*endpoint{}
 		for act := range s {
-			log.Printf("BOO")
 			if isDone(ctx) {
 				break
 			}
@@ -132,7 +130,6 @@ func cleanupEndpoints(endpoints []*endpoint) []*endpoint {
 	for _, endpoint := range endpoints {
 		select {
 		case <-endpoint.ctx.Done():
-			log.Printf("BOOOOOOOO")
 			close(endpoint.data)
 		default:
 			cleaned = append(cleaned, endpoint)
