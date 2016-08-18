@@ -2,7 +2,10 @@ package stats
 
 import (
 	"fmt"
+	"net/http"
 	"time"
+
+	"github.com/MediaMath/govent/graphite"
 
 	"golang.org/x/net/context"
 )
@@ -80,7 +83,17 @@ func RegisterStatsContext(ctx context.Context) error {
 	graphitePassword := getString(ctx, graphitePasswordKey, "")
 	graphiteVerbose, _ := ctx.Value(graphiteVerboseKey).(bool)
 
-	RegisterGraphite(ctx, graphiteURL, graphiteUser, graphitePassword, graphiteVerbose)
+	govent := &graphite.Graphite{
+		Username: graphiteUser,
+		Password: graphitePassword,
+		Addr:     graphiteURL,
+		Client:   &http.Client{Timeout: time.Second * 10},
+		Verbose:  graphiteVerbose,
+		Prefix:   GetPrefix(ctx),
+	}
+
+	go StartGraphite(ctx, DefaultBroker, govent)
+
 	return nil
 }
 
