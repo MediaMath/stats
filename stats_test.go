@@ -13,6 +13,7 @@ func TestDatum(t *testing.T) {
 
 	broker := NewBroker(100)
 	go broker.Start(ctx)
+	go LogStats(ctx, broker)
 
 	data := broker.RegisterEndpoint(ctx, 100)
 
@@ -28,7 +29,6 @@ func TestDatum(t *testing.T) {
 		received := 0
 		c := &counts{}
 		for datum := range data {
-
 			switch t := datum.(type) {
 			case *count:
 				c.count += t.Value

@@ -16,7 +16,7 @@ func init() {
 }
 
 //Send will send the supplied datum
-func Send(datum Datum) {
+func Send(datum interface{}) {
 	DefaultBroker.Send(datum)
 }
 

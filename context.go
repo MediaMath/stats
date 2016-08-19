@@ -2,10 +2,12 @@ package stats
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/MediaMath/govent/graphite"
+	"gopkg.in/alexcesaro/statsd.v2"
 
 	"golang.org/x/net/context"
 )
@@ -77,7 +79,13 @@ func RegisterStatsContext(ctx context.Context) error {
 		return fmt.Errorf("No graphite URL not starting stats consumers")
 	}
 
-	RegisterStatsd(ctx, statsdURL, prefix)
+	log.Printf("Register statsd: %v %v", statsdURL, prefix)
+	s, err := statsd.New(statsd.Address(statsdURL), statsd.Prefix(prefix))
+	if err != nil {
+		return err
+	}
+
+	go StartStatsd(ctx, DefaultBroker, s)
 
 	graphiteUser := getString(ctx, graphiteUserKey, "")
 	graphitePassword := getString(ctx, graphitePasswordKey, "")
@@ -92,6 +100,7 @@ func RegisterStatsContext(ctx context.Context) error {
 		Prefix:   GetPrefix(ctx),
 	}
 
+	log.Printf("Starting graphite %v %v", govent.Username, govent.Addr)
 	go StartGraphite(ctx, DefaultBroker, govent)
 
 	return nil

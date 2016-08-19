@@ -18,8 +18,8 @@ func NewBroker(bufferSize int) Broker {
 }
 
 //RegisterEndpoint will add an endpoint to the list, the provided context will be listened to for cancellation
-func (s Broker) RegisterEndpoint(ctx context.Context, bufferSize int) <-chan Datum {
-	data := make(chan Datum, bufferSize)
+func (s Broker) RegisterEndpoint(ctx context.Context, bufferSize int) <-chan interface{} {
+	data := make(chan interface{}, bufferSize)
 
 	select {
 	case s <- &endpoint{data, ctx}:
@@ -30,7 +30,7 @@ func (s Broker) RegisterEndpoint(ctx context.Context, bufferSize int) <-chan Dat
 }
 
 //Send will send the supplied datum
-func (s Broker) Send(datum Datum) {
+func (s Broker) Send(datum interface{}) {
 	select {
 	case s <- datum:
 	default:
@@ -100,12 +100,12 @@ func (s Broker) Start(ctx context.Context) {
 			endpoints = cleanupEndpoints(endpoints)
 
 			switch a := act.(type) {
-			case Datum:
+			case *endpoint:
+				endpoints = append(endpoints, a)
+			default:
 				for _, e := range endpoints {
 					e.send(a)
 				}
-			case *endpoint:
-				endpoints = append(endpoints, a)
 			}
 
 		}
@@ -135,19 +135,16 @@ func cleanupEndpoints(endpoints []*endpoint) []*endpoint {
 			cleaned = append(cleaned, endpoint)
 		}
 	}
+
 	return cleaned
 }
 
-type statsActivity interface {
-	Action(map[endpoint]bool) (map[endpoint]bool, error)
-}
-
 type endpoint struct {
-	data chan<- Datum
+	data chan<- interface{}
 	ctx  context.Context
 }
 
-func (e *endpoint) send(d Datum) {
+func (e *endpoint) send(d interface{}) {
 	select {
 	case e.data <- d:
 	default:
