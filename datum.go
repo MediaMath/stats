@@ -6,9 +6,6 @@ import (
 	"github.com/MediaMath/govent/graphite"
 )
 
-//Datum is a individual statistic
-type Datum interface{}
-
 type event struct {
 	inner *graphite.Event
 }
