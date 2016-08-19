@@ -138,10 +138,6 @@ func cleanupEndpoints(endpoints []*endpoint) []*endpoint {
 	return cleaned
 }
 
-type statsActivity interface {
-	Action(map[endpoint]bool) (map[endpoint]bool, error)
-}
-
 type endpoint struct {
 	data chan<- Datum
 	ctx  context.Context

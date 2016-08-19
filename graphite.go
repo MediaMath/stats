@@ -10,11 +10,11 @@ import (
 
 //StartGraphite registers the endpoint and begins looping over its data
 func StartGraphite(ctx context.Context, broker Broker, govent *graphite.Graphite) {
-	log.Printf("Starting graphite %v %v", govent.Username, govent.Addr)
 	data := broker.RegisterEndpoint(ctx, 100)
 	for d := range data {
-		err := d.SendToGraphiteEvents(govent)
-		if err != nil {
+		event, is := d.(event)
+		if is {
+			err := govent.Publish(event.inner)
 			log.Printf("Error publishing %v to graphite: %v", d, err)
 		}
 	}
