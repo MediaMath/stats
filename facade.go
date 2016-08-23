@@ -3,6 +3,8 @@ package stats
 import (
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/MediaMath/govent/graphite"
 )
 
@@ -11,6 +13,11 @@ var DefaultBroker Broker
 
 func init() {
 	DefaultBroker = StartBroker(100)
+}
+
+//Finish will finish the DefaultBroker
+func Finish(ctx context.Context) error {
+	return DefaultBroker.Finish(ctx)
 }
 
 //Send will send the supplied datum
