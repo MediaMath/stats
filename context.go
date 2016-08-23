@@ -70,38 +70,33 @@ func RegisterStatsContext(ctx context.Context) error {
 	}
 
 	statsdURL := getString(ctx, statsdURLKey, "")
-	if statsdURL == "" {
-		return fmt.Errorf("No statsd URL not starting stats consumers")
+	if statsdURL != "" {
+		log.Printf("Register statsd: %v %v", statsdURL, prefix)
+		s, err := statsd.New(statsd.Address(statsdURL), statsd.Prefix(prefix))
+		if err != nil {
+			return err
+		}
+
+		DefaultBroker.RegisterEndpoint(StatsdEndpoint(s))
 	}
 
 	graphiteURL := getString(ctx, graphiteURLKey, "")
-	if graphiteURL == "" {
-		return fmt.Errorf("No graphite URL not starting stats consumers")
+	if graphiteURL != "" {
+		graphiteUser := getString(ctx, graphiteUserKey, "")
+		graphitePassword := getString(ctx, graphitePasswordKey, "")
+		graphiteVerbose, _ := ctx.Value(graphiteVerboseKey).(bool)
+		govent := &graphite.Graphite{
+			Username: graphiteUser,
+			Password: graphitePassword,
+			Addr:     graphiteURL,
+			Client:   &http.Client{Timeout: time.Second * 10},
+			Verbose:  graphiteVerbose,
+			Prefix:   prefix,
+		}
+
+		log.Printf("Starting graphite %v %v", govent.Username, govent.Addr)
+		DefaultBroker.RegisterEndpoint(GraphiteEndpoint(govent))
 	}
-
-	log.Printf("Register statsd: %v %v", statsdURL, prefix)
-	s, err := statsd.New(statsd.Address(statsdURL), statsd.Prefix(prefix))
-	if err != nil {
-		return err
-	}
-
-	go StartStatsd(ctx, DefaultBroker, s)
-
-	graphiteUser := getString(ctx, graphiteUserKey, "")
-	graphitePassword := getString(ctx, graphitePasswordKey, "")
-	graphiteVerbose, _ := ctx.Value(graphiteVerboseKey).(bool)
-
-	govent := &graphite.Graphite{
-		Username: graphiteUser,
-		Password: graphitePassword,
-		Addr:     graphiteURL,
-		Client:   &http.Client{Timeout: time.Second * 10},
-		Verbose:  graphiteVerbose,
-		Prefix:   GetPrefix(ctx),
-	}
-
-	log.Printf("Starting graphite %v %v", govent.Username, govent.Addr)
-	go StartGraphite(ctx, DefaultBroker, govent)
 
 	return nil
 }

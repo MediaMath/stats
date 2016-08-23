@@ -5,28 +5,59 @@ import (
 	"time"
 
 	"github.com/MediaMath/govent/graphite"
-
-	"golang.org/x/net/context"
 )
 
 //Broker is a coordination point for stats and endpoints
 type Broker chan interface{}
 
-//NewBroker sets up a broker with the provided buffer size
-func NewBroker(bufferSize int) Broker {
-	return Broker(make(chan interface{}, 100))
+//StartBroker starts the background goroutine that listens for stats and forwards them
+func StartBroker(bufferSize int) Broker {
+	s := Broker(make(chan interface{}, bufferSize))
+
+	go func() {
+		endpoints := []endpoint{}
+		for act := range s {
+			switch a := act.(type) {
+			case Endpoint:
+				e := make(chan interface{}, bufferSize)
+				endpoints = append(endpoints, e)
+				go a(e)
+			default:
+				for _, e := range endpoints {
+					select {
+					case e <- a:
+					default:
+					}
+				}
+			}
+
+		}
+
+		for _, endpoint := range endpoints {
+			close(endpoint)
+		}
+
+	}()
+
+	return s
 }
 
-//RegisterEndpoint will add an endpoint to the list, the provided context will be listened to for cancellation
-func (s Broker) RegisterEndpoint(ctx context.Context, bufferSize int) <-chan interface{} {
-	data := make(chan interface{}, bufferSize)
+//Endpoint is a function that takes a channel of stats and reacts to them. It will be started in a go routine by the broker
+type Endpoint func(<-chan interface{})
+type endpoint chan<- interface{}
 
+//ErrActivityBufferFull is returned if the brokers buffer is full when attempting to register an endpoint
+var ErrActivityBufferFull = fmt.Errorf("stats activity buffer full")
+
+//RegisterEndpoint will add an endpoint to the list, the provided context will be listened to for cancellation
+func (s Broker) RegisterEndpoint(e Endpoint) error {
 	select {
-	case s <- &endpoint{data, ctx}:
-	case <-ctx.Done():
+	case s <- e:
+	default:
+		return ErrActivityBufferFull
 	}
 
-	return data
+	return nil
 }
 
 //Send will send the supplied datum
@@ -87,69 +118,3 @@ func (s Broker) GraphiteEvent(e *graphite.Event) {
 func (s Broker) Event(tag string, data string) {
 	s.GraphiteEvent(graphite.NewTaggedEvent(tag, data))
 }
-
-//Start starts the background goroutine that listens for stats and forwards them
-func (s Broker) Start(ctx context.Context) {
-	go func() {
-		endpoints := []*endpoint{}
-		for act := range s {
-			if isDone(ctx) {
-				break
-			}
-
-			endpoints = cleanupEndpoints(endpoints)
-
-			switch a := act.(type) {
-			case *endpoint:
-				endpoints = append(endpoints, a)
-			default:
-				for _, e := range endpoints {
-					e.send(a)
-				}
-			}
-
-		}
-
-		for _, endpoint := range endpoints {
-			close(endpoint.data)
-		}
-	}()
-}
-
-func isDone(ctx context.Context) bool {
-	select {
-	case <-ctx.Done():
-		return true
-	default:
-		return false
-	}
-}
-
-func cleanupEndpoints(endpoints []*endpoint) []*endpoint {
-	cleaned := []*endpoint{}
-	for _, endpoint := range endpoints {
-		select {
-		case <-endpoint.ctx.Done():
-			close(endpoint.data)
-		default:
-			cleaned = append(cleaned, endpoint)
-		}
-	}
-
-	return cleaned
-}
-
-type endpoint struct {
-	data chan<- interface{}
-	ctx  context.Context
-}
-
-func (e *endpoint) send(d interface{}) {
-	select {
-	case e.data <- d:
-	default:
-	}
-}
-
-//ErrActivityBufferFull is returned anytime the activity buffer is full in stats
-var ErrActivityBufferFull = fmt.Errorf("stats activity buffer full")

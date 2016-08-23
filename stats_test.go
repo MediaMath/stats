@@ -8,24 +8,18 @@ import (
 )
 
 func TestDatum(t *testing.T) {
-	ctx, clean := context.WithTimeout(context.Background(), time.Second)
-	defer clean()
 
-	broker := NewBroker(100)
-	go broker.Start(ctx)
-	go LogStats(ctx, broker)
-
-	data := broker.RegisterEndpoint(ctx, 100)
+	broker := StartBroker(100)
+	broker.RegisterEndpoint(LogEndpoint())
 
 	type counts struct {
 		count  int
 		gauge  int
 		timing int
 	}
-
 	sum := make(chan *counts)
 
-	go func() {
+	broker.RegisterEndpoint(func(data <-chan interface{}) {
 		received := 0
 		c := &counts{}
 		for datum := range data {
@@ -46,7 +40,7 @@ func TestDatum(t *testing.T) {
 
 		sum <- c
 		close(sum)
-	}()
+	})
 
 	broker.Count("C", 1)
 	broker.Gauge("G", 3)
@@ -54,6 +48,9 @@ func TestDatum(t *testing.T) {
 	broker.Count("C", 8)
 	broker.Timing("T", 1)
 	broker.Gauge("G", 3)
+
+	ctx, clean := context.WithTimeout(context.Background(), time.Second)
+	defer clean()
 
 	select {
 	case c := <-sum:
@@ -71,21 +68,11 @@ func TestDatum(t *testing.T) {
 }
 
 func TestMultipleRegistered(t *testing.T) {
-	ctx, clean := context.WithTimeout(context.Background(), 1*time.Second)
-	defer clean()
 
-	broker := NewBroker(100)
-	go broker.Start(ctx)
-
-	data1 := broker.RegisterEndpoint(ctx, 100)
-	data2 := broker.RegisterEndpoint(ctx, 100)
-
-	broker.Count("C", 7)
-	broker.Count("C", 8)
-	broker.Count("C", 6)
+	broker := StartBroker(100)
 
 	sum1 := make(chan int)
-	go func() {
+	broker.RegisterEndpoint(func(data1 <-chan interface{}) {
 		s := 0
 		for c := range data1 {
 			t := c.(*count)
@@ -97,10 +84,10 @@ func TestMultipleRegistered(t *testing.T) {
 		}
 		sum1 <- s
 		close(sum1)
-	}()
+	})
 
 	sum2 := make(chan int)
-	go func() {
+	broker.RegisterEndpoint(func(data2 <-chan interface{}) {
 		s := 0
 		for c := range data2 {
 			t := c.(*count)
@@ -112,7 +99,14 @@ func TestMultipleRegistered(t *testing.T) {
 		}
 		sum2 <- s
 		close(sum2)
-	}()
+	})
+
+	broker.Count("C", 7)
+	broker.Count("C", 8)
+	broker.Count("C", 6)
+
+	ctx, clean := context.WithTimeout(context.Background(), 1*time.Second)
+	defer clean()
 
 	select {
 	case s := <-sum1:
