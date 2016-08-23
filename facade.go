@@ -3,16 +3,14 @@ package stats
 import (
 	"time"
 
-	"golang.org/x/net/context"
-
 	"github.com/MediaMath/govent/graphite"
 )
 
 //DefaultBroker is started by default and runs in the background
-var DefaultBroker = NewBroker(100)
+var DefaultBroker Broker
 
 func init() {
-	DefaultBroker.Start(context.Background())
+	DefaultBroker = StartBroker(100)
 }
 
 //Send will send the supplied datum
