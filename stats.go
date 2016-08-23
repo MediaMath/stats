@@ -2,7 +2,10 @@ package stats
 
 import (
 	"fmt"
+	"sync"
 	"time"
+
+	"golang.org/x/net/context"
 
 	"github.com/MediaMath/govent/graphite"
 )
@@ -13,40 +16,61 @@ type Broker chan interface{}
 //StartBroker starts the background goroutine that listens for stats and forwards them
 func StartBroker(bufferSize int) Broker {
 	s := Broker(make(chan interface{}, bufferSize))
-
-	go func() {
-		endpoints := []endpoint{}
-		for act := range s {
-			switch a := act.(type) {
-			case Endpoint:
-				e := make(chan interface{}, bufferSize)
-				endpoints = append(endpoints, e)
-				go a(e)
-			default:
-				for _, e := range endpoints {
-					select {
-					case e <- a:
-					default:
-					}
-				}
-			}
-
-		}
-
-		for _, endpoint := range endpoints {
-			close(endpoint)
-		}
-
-	}()
-
+	go brokerLoop(s, bufferSize)
 	return s
+}
+
+func brokerLoop(s Broker, bufferSize int) {
+	endpoints := []endpoint{}
+	var allDone sync.WaitGroup
+
+	var pill poison
+	for act := range s {
+		endpoints, pill = doEvent(endpoints, allDone, bufferSize, act)
+		if pill != nil {
+			break
+		}
+	}
+
+	for _, endpoint := range endpoints {
+		close(endpoint)
+	}
+
+	allDone.Wait()
+	close(pill)
+}
+
+func doEvent(endpoints []endpoint, allDone sync.WaitGroup, bufferSize int, act interface{}) ([]endpoint, poison) {
+	switch a := act.(type) {
+	case poison:
+		return endpoints, a
+	case Endpoint:
+		e := make(chan interface{}, bufferSize)
+		endpoints = append(endpoints, e)
+		allDone.Add(1)
+		go func() {
+			a(e)
+			allDone.Done()
+		}()
+	default:
+		for _, e := range endpoints {
+			select {
+			case e <- a:
+			default:
+			}
+		}
+	}
+
+	return endpoints, nil
 }
 
 //Endpoint is a function that takes a channel of stats and reacts to them. It will be started in a go routine by the broker
 type Endpoint func(<-chan interface{})
 type endpoint chan<- interface{}
 
-//ErrActivityBufferFull is returned if the brokers buffer is full when attempting to register an endpoint
+type poison chan<- error
+
+//ErrActivityBufferFull is returned if the brokers buffer is full when attempting to register an endpoint or stop the broker
 var ErrActivityBufferFull = fmt.Errorf("stats activity buffer full")
 
 //RegisterEndpoint will add an endpoint to the list, the provided context will be listened to for cancellation
@@ -58,6 +82,25 @@ func (s Broker) RegisterEndpoint(e Endpoint) error {
 	}
 
 	return nil
+}
+
+//Finish will attempt to shutdown the broker and all endpoints after sending buffered stats
+func (s Broker) Finish(ctx context.Context) error {
+	done := make(chan error)
+	select {
+	case s <- poison(done):
+	default:
+		return ErrActivityBufferFull
+	}
+
+	var err error
+	select {
+	case err = <-done:
+	case <-ctx.Done():
+		err = ctx.Err()
+	}
+
+	return err
 }
 
 //Send will send the supplied datum

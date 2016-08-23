@@ -52,8 +52,14 @@ func TestDatum(t *testing.T) {
 	ctx, clean := context.WithTimeout(context.Background(), time.Second)
 	defer clean()
 
+	err := broker.Finish(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	select {
 	case c := <-sum:
+
 		if c == nil {
 			t.Fatal("No c")
 		}
@@ -62,7 +68,7 @@ func TestDatum(t *testing.T) {
 			t.Errorf("Wrong: %v", c)
 		}
 	case <-ctx.Done():
-		t.Fatal("Timed out")
+		t.Fatal(ctx.Err())
 	}
 
 }
@@ -107,6 +113,10 @@ func TestMultipleRegistered(t *testing.T) {
 
 	ctx, clean := context.WithTimeout(context.Background(), 1*time.Second)
 	defer clean()
+	err := broker.Finish(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	select {
 	case s := <-sum1:
@@ -114,7 +124,7 @@ func TestMultipleRegistered(t *testing.T) {
 			t.Errorf("Wrong: %v", s)
 		}
 	case <-ctx.Done():
-		t.Fatal("Timed out")
+		t.Fatal(ctx.Err())
 	}
 
 	select {
@@ -123,6 +133,6 @@ func TestMultipleRegistered(t *testing.T) {
 			t.Errorf("Wrong: %v", s)
 		}
 	case <-ctx.Done():
-		t.Fatal("Timed out")
+		t.Fatal(ctx.Err())
 	}
 }
