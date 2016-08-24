@@ -23,10 +23,10 @@ func StartBroker(bufferSize int) Broker {
 func brokerLoop(s Broker, bufferSize int) {
 	endpoints := []endpoint{}
 	var allDone sync.WaitGroup
-
 	var pill poison
+
 	for act := range s {
-		endpoints, pill = doEvent(endpoints, allDone, bufferSize, act)
+		endpoints, pill = doEvent(endpoints, &allDone, bufferSize, act)
 		if pill != nil {
 			break
 		}
@@ -36,11 +36,11 @@ func brokerLoop(s Broker, bufferSize int) {
 		close(endpoint)
 	}
 
-	allDone.Wait()
 	close(pill)
+	allDone.Wait()
 }
 
-func doEvent(endpoints []endpoint, allDone sync.WaitGroup, bufferSize int, act interface{}) ([]endpoint, poison) {
+func doEvent(endpoints []endpoint, allDone *sync.WaitGroup, bufferSize int, act interface{}) ([]endpoint, poison) {
 	switch a := act.(type) {
 	case poison:
 		return endpoints, a
@@ -111,6 +111,8 @@ func (s Broker) Send(datum interface{}) {
 	}
 }
 
+/************** Graphite Methods *********************/
+
 //Count sends a count value for the given name
 func (s Broker) Count(name string, i int) {
 	s.Send(&count{Name: name, Value: i})
@@ -160,4 +162,52 @@ func (s Broker) GraphiteEvent(e *graphite.Event) {
 //Event will send an event
 func (s Broker) Event(tag string, data string) {
 	s.GraphiteEvent(graphite.NewTaggedEvent(tag, data))
+}
+
+/************** Datadog Methods *********************/
+
+//DDCount sends a count value for the given name
+func (s Broker) DDCount(name string, i int64) {
+	s.Send(&ddcount{Name: name, Value: i, Tags: nil, Rate: 1})
+}
+
+//DDIncr increments a count by 1
+func (s Broker) DDIncr(name string) {
+	s.DDCount(name, 1)
+}
+
+//DDGauge sends a gauge value for the given name
+func (s Broker) DDGauge(name string, i float64) {
+	s.Send(&ddgauge{Name: name, Value: i, Tags: nil, Rate: 1})
+}
+
+//DDOn sends a 1 gauge
+func (s Broker) DDOn(name string) {
+	s.DDGauge(name, 1)
+}
+
+//DDOff sends a 0 gauge
+func (s Broker) DDOff(name string) {
+	s.DDGauge(name, 0)
+}
+
+//DDTiming sends a timing value for the given name
+func (s Broker) DDTiming(name string, i time.Duration) {
+	s.Send(&ddtiming{Name: name, Value: i, Tags: nil, Rate: 1})
+}
+
+//DDTimingDuration sends a timing value for the duration provided
+func (s Broker) DDTimingDuration(name string, duration time.Duration) {
+	timeMillis := time.Duration(duration.Nanoseconds() / 1000000)
+	s.DDTiming(name, timeMillis)
+}
+
+//DDTimingPeriod sends a timing value for the given start and end
+func (s Broker) DDTimingPeriod(name string, start time.Time, end time.Time) {
+	s.DDTimingDuration(name, end.Sub(start))
+}
+
+//DDEvent will send a graphite event
+func (s Broker) DDEvent(title string, text string) {
+	s.Send(&ddevent{Title: title, Text: text})
 }
