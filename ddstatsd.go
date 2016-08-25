@@ -17,6 +17,8 @@ func DatadogStatsdEndpoint(s *ddStatsd.Client) Endpoint {
 				s.Gauge(t.Name, float64(t.Value), t.Tags, t.Rate)
 			case *timing:
 				s.Timing(t.Name, time.Duration(t.Value), t.Tags, t.Rate)
+			case *event:
+				s.SimpleEvent(t.inner.Tags, t.inner.Data)
 			default:
 			}
 		}
