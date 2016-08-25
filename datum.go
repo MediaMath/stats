@@ -17,8 +17,6 @@ func (e event) String() string {
 type count struct {
 	Name  string
 	Value int
-	Tags  []string
-	Rate  float64
 }
 
 func (c *count) String() string {
@@ -28,8 +26,6 @@ func (c *count) String() string {
 type gauge struct {
 	Name  string
 	Value int
-	Tags  []string
-	Rate  float64
 }
 
 func (g *gauge) String() string {
@@ -39,8 +35,6 @@ func (g *gauge) String() string {
 type timing struct {
 	Name  string
 	Value int
-	Tags  []string
-	Rate  float64
 }
 
 func (t *timing) String() string {

@@ -113,11 +113,7 @@ func (s Broker) Send(datum interface{}) {
 
 //Count sends a count value for the given name
 func (s Broker) Count(name string, value int) {
-	var (
-		tags       []string
-		sampleRate float64 = 1
-	)
-	s.Send(&count{Name: name, Value: value, Tags: tags, Rate: sampleRate})
+	s.Send(&count{Name: name, Value: value})
 }
 
 //Incr increments a count by 1
@@ -127,11 +123,7 @@ func (s Broker) Incr(name string) {
 
 //Gauge sends a gauge value for the given name
 func (s Broker) Gauge(name string, value int) {
-	var (
-		tags       []string
-		sampleRate float64 = 1
-	)
-	s.Send(&gauge{Name: name, Value: value, Tags: tags, Rate: sampleRate})
+	s.Send(&gauge{Name: name, Value: value})
 }
 
 //On sends a 1 gauge
@@ -146,11 +138,7 @@ func (s Broker) Off(name string) {
 
 //Timing sends a timing value for the given name
 func (s Broker) Timing(name string, value int) {
-	var (
-		tags       []string
-		sampleRate float64 = 1
-	)
-	s.Send(&timing{Name: name, Value: value, Tags: tags, Rate: sampleRate})
+	s.Send(&timing{Name: name, Value: value})
 }
 
 //TimingDuration sends a timing value for the duration provided
