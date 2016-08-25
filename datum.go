@@ -2,6 +2,7 @@ package stats
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/MediaMath/govent/graphite"
 )
@@ -14,9 +15,20 @@ func (e event) String() string {
 	return fmt.Sprintf("%v|%v|e", e.inner.Tags, e.inner.Data)
 }
 
+type devent struct {
+	Title string
+	Text  string
+}
+
+func (e devent) String() string {
+	return fmt.Sprintf("%v|%v|e", e.Title, e.Text)
+}
+
 type count struct {
 	Name  string
-	Value int
+	Value int64
+	Tags  []string
+	Rate  float64
 }
 
 func (c *count) String() string {
@@ -25,7 +37,9 @@ func (c *count) String() string {
 
 type gauge struct {
 	Name  string
-	Value int
+	Value float64
+	Tags  []string
+	Rate  float64
 }
 
 func (g *gauge) String() string {
@@ -34,7 +48,9 @@ func (g *gauge) String() string {
 
 type timing struct {
 	Name  string
-	Value int
+	Value time.Duration
+	Tags  []string
+	Rate  float64
 }
 
 func (t *timing) String() string {

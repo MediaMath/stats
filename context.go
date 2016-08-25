@@ -90,7 +90,7 @@ func RegisterDatadogStatsContext(ctx context.Context) error {
 		}
 		c.Namespace = prefix
 
-		DDBroker.RegisterEndpoint(DatadogStatsdEndpoint(c))
+		DefaultBroker.RegisterEndpoint(DatadogStatsdEndpoint(c))
 	}
 	return nil
 }

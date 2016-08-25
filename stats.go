@@ -111,11 +111,13 @@ func (s Broker) Send(datum interface{}) {
 	}
 }
 
-/************** Graphite Methods *********************/
-
 //Count sends a count value for the given name
-func (s Broker) Count(name string, i int) {
-	s.Send(&count{Name: name, Value: i})
+func (s Broker) Count(name string, value int64) {
+	var (
+		tags       []string
+		sampleRate float64 = 1
+	)
+	s.Send(&count{Name: name, Value: value, Tags: tags, Rate: sampleRate})
 }
 
 //Incr increments a count by 1
@@ -124,8 +126,12 @@ func (s Broker) Incr(name string) {
 }
 
 //Gauge sends a gauge value for the given name
-func (s Broker) Gauge(name string, i int) {
-	s.Send(&gauge{Name: name, Value: i})
+func (s Broker) Gauge(name string, value float64) {
+	var (
+		tags       []string
+		sampleRate float64 = 1
+	)
+	s.Send(&gauge{Name: name, Value: value, Tags: tags, Rate: sampleRate})
 }
 
 //On sends a 1 gauge
@@ -139,13 +145,17 @@ func (s Broker) Off(name string) {
 }
 
 //Timing sends a timing value for the given name
-func (s Broker) Timing(name string, i int) {
-	s.Send(&timing{Name: name, Value: i})
+func (s Broker) Timing(name string, value time.Duration) {
+	var (
+		tags       []string
+		sampleRate float64 = 1
+	)
+	s.Send(&timing{Name: name, Value: value, Tags: tags, Rate: sampleRate})
 }
 
 //TimingDuration sends a timing value for the duration provided
 func (s Broker) TimingDuration(name string, duration time.Duration) {
-	timeMillis := int(duration.Nanoseconds() / 1000000)
+	timeMillis := time.Duration(duration.Nanoseconds() / 1000000)
 	s.Timing(name, timeMillis)
 }
 
@@ -164,50 +174,7 @@ func (s Broker) Event(tag string, data string) {
 	s.GraphiteEvent(graphite.NewTaggedEvent(tag, data))
 }
 
-/************** Datadog Methods *********************/
-
-//DDCount sends a count value for the given name
-func (s Broker) DDCount(name string, i int64) {
-	s.Send(&ddcount{Name: name, Value: i, Tags: nil, Rate: 1})
-}
-
-//DDIncr increments a count by 1
-func (s Broker) DDIncr(name string) {
-	s.DDCount(name, 1)
-}
-
-//DDGauge sends a gauge value for the given name
-func (s Broker) DDGauge(name string, i float64) {
-	s.Send(&ddgauge{Name: name, Value: i, Tags: nil, Rate: 1})
-}
-
-//DDOn sends a 1 gauge
-func (s Broker) DDOn(name string) {
-	s.DDGauge(name, 1)
-}
-
-//DDOff sends a 0 gauge
-func (s Broker) DDOff(name string) {
-	s.DDGauge(name, 0)
-}
-
-//DDTiming sends a timing value for the given name
-func (s Broker) DDTiming(name string, i time.Duration) {
-	s.Send(&ddtiming{Name: name, Value: i, Tags: nil, Rate: 1})
-}
-
-//DDTimingDuration sends a timing value for the duration provided
-func (s Broker) DDTimingDuration(name string, duration time.Duration) {
-	timeMillis := time.Duration(duration.Nanoseconds() / 1000000)
-	s.DDTiming(name, timeMillis)
-}
-
-//DDTimingPeriod sends a timing value for the given start and end
-func (s Broker) DDTimingPeriod(name string, start time.Time, end time.Time) {
-	s.DDTimingDuration(name, end.Sub(start))
-}
-
-//DDEvent will send a graphite event
-func (s Broker) DDEvent(title string, text string) {
-	s.Send(&ddevent{Title: title, Text: text})
+//DEvent will send a datadog event
+func (s Broker) DEvent(tag string, data string) {
+	s.Send(&devent{Title: tag, Text: data})
 }
