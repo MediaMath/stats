@@ -13,9 +13,9 @@ func TestDatum(t *testing.T) {
 	broker.RegisterEndpoint(LogEndpoint())
 
 	type counts struct {
-		count  int64
-		gauge  float64
-		timing time.Duration
+		count  int
+		gauge  int
+		timing int
 	}
 	sum := make(chan *counts)
 
@@ -77,9 +77,9 @@ func TestMultipleRegistered(t *testing.T) {
 
 	broker := StartBroker(100)
 
-	sum1 := make(chan int64)
+	sum1 := make(chan int)
 	broker.RegisterEndpoint(func(data1 <-chan interface{}) {
-		s := int64(0)
+		s := 0
 		for c := range data1 {
 			t := c.(*count)
 			s += t.Value
@@ -92,9 +92,9 @@ func TestMultipleRegistered(t *testing.T) {
 		close(sum1)
 	})
 
-	sum2 := make(chan int64)
+	sum2 := make(chan int)
 	broker.RegisterEndpoint(func(data2 <-chan interface{}) {
-		s := int64(0)
+		s := 0
 		for c := range data2 {
 			t := c.(*count)
 			s += t.Value

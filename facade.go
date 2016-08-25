@@ -30,11 +30,6 @@ func Event(tag string, data string) {
 	DefaultBroker.Event(tag, data)
 }
 
-//DEvent will send a datadog event
-func DEvent(tag string, data string) {
-	DefaultBroker.DEvent(tag, data)
-}
-
 //GraphiteEvent will send a graphite event
 func GraphiteEvent(e *graphite.Event) {
 	DefaultBroker.GraphiteEvent(e)
@@ -46,7 +41,7 @@ func Incr(name string) {
 }
 
 //Count sends a count value for the given name
-func Count(name string, i int64) {
+func Count(name string, i int) {
 	DefaultBroker.Count(name, i)
 }
 
@@ -61,12 +56,12 @@ func Off(name string) {
 }
 
 //Gauge sends a gauge value for the given name
-func Gauge(name string, i float64) {
+func Gauge(name string, i int) {
 	DefaultBroker.Gauge(name, i)
 }
 
 //Timing sends a timing value for the given name
-func Timing(name string, i time.Duration) {
+func Timing(name string, i int) {
 	DefaultBroker.Timing(name, i)
 }
 

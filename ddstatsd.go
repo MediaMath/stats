@@ -1,6 +1,10 @@
 package stats
 
-import ddStatsd "github.com/DataDog/datadog-go/statsd"
+import (
+	"time"
+
+	ddStatsd "github.com/DataDog/datadog-go/statsd"
+)
 
 //DatadogStatsdEndpoint sends stats to a statsd client
 func DatadogStatsdEndpoint(s *ddStatsd.Client) Endpoint {
@@ -8,13 +12,11 @@ func DatadogStatsdEndpoint(s *ddStatsd.Client) Endpoint {
 		for d := range data {
 			switch t := d.(type) {
 			case *count:
-				s.Count(t.Name, t.Value, t.Tags, t.Rate)
+				s.Count(t.Name, int64(t.Value), t.Tags, t.Rate)
 			case *gauge:
-				s.Gauge(t.Name, t.Value, t.Tags, t.Rate)
+				s.Gauge(t.Name, float64(t.Value), t.Tags, t.Rate)
 			case *timing:
-				s.Timing(t.Name, t.Value, t.Tags, t.Rate)
-			case *devent:
-				s.SimpleEvent(t.Title, t.Text)
+				s.Timing(t.Name, time.Duration(t.Value), t.Tags, t.Rate)
 			default:
 			}
 		}

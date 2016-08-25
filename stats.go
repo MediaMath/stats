@@ -112,7 +112,7 @@ func (s Broker) Send(datum interface{}) {
 }
 
 //Count sends a count value for the given name
-func (s Broker) Count(name string, value int64) {
+func (s Broker) Count(name string, value int) {
 	var (
 		tags       []string
 		sampleRate float64 = 1
@@ -126,7 +126,7 @@ func (s Broker) Incr(name string) {
 }
 
 //Gauge sends a gauge value for the given name
-func (s Broker) Gauge(name string, value float64) {
+func (s Broker) Gauge(name string, value int) {
 	var (
 		tags       []string
 		sampleRate float64 = 1
@@ -145,7 +145,7 @@ func (s Broker) Off(name string) {
 }
 
 //Timing sends a timing value for the given name
-func (s Broker) Timing(name string, value time.Duration) {
+func (s Broker) Timing(name string, value int) {
 	var (
 		tags       []string
 		sampleRate float64 = 1
@@ -155,7 +155,7 @@ func (s Broker) Timing(name string, value time.Duration) {
 
 //TimingDuration sends a timing value for the duration provided
 func (s Broker) TimingDuration(name string, duration time.Duration) {
-	timeMillis := time.Duration(duration.Nanoseconds() / 1000000)
+	timeMillis := int(duration.Nanoseconds() / 1000000)
 	s.Timing(name, timeMillis)
 }
 
@@ -172,9 +172,4 @@ func (s Broker) GraphiteEvent(e *graphite.Event) {
 //Event will send an event
 func (s Broker) Event(tag string, data string) {
 	s.GraphiteEvent(graphite.NewTaggedEvent(tag, data))
-}
-
-//DEvent will send a datadog event
-func (s Broker) DEvent(tag string, data string) {
-	s.Send(&devent{Title: tag, Text: data})
 }
