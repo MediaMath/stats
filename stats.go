@@ -23,10 +23,10 @@ func StartBroker(bufferSize int) Broker {
 func brokerLoop(s Broker, bufferSize int) {
 	endpoints := []endpoint{}
 	var allDone sync.WaitGroup
-
 	var pill poison
+
 	for act := range s {
-		endpoints, pill = doEvent(endpoints, allDone, bufferSize, act)
+		endpoints, pill = doEvent(endpoints, &allDone, bufferSize, act)
 		if pill != nil {
 			break
 		}
@@ -36,11 +36,11 @@ func brokerLoop(s Broker, bufferSize int) {
 		close(endpoint)
 	}
 
-	allDone.Wait()
 	close(pill)
+	allDone.Wait()
 }
 
-func doEvent(endpoints []endpoint, allDone sync.WaitGroup, bufferSize int, act interface{}) ([]endpoint, poison) {
+func doEvent(endpoints []endpoint, allDone *sync.WaitGroup, bufferSize int, act interface{}) ([]endpoint, poison) {
 	switch a := act.(type) {
 	case poison:
 		return endpoints, a
@@ -112,8 +112,8 @@ func (s Broker) Send(datum interface{}) {
 }
 
 //Count sends a count value for the given name
-func (s Broker) Count(name string, i int) {
-	s.Send(&count{Name: name, Value: i})
+func (s Broker) Count(name string, value int) {
+	s.Send(&count{Name: name, Value: value})
 }
 
 //Incr increments a count by 1
@@ -122,8 +122,8 @@ func (s Broker) Incr(name string) {
 }
 
 //Gauge sends a gauge value for the given name
-func (s Broker) Gauge(name string, i int) {
-	s.Send(&gauge{Name: name, Value: i})
+func (s Broker) Gauge(name string, value int) {
+	s.Send(&gauge{Name: name, Value: value})
 }
 
 //On sends a 1 gauge
@@ -137,8 +137,8 @@ func (s Broker) Off(name string) {
 }
 
 //Timing sends a timing value for the given name
-func (s Broker) Timing(name string, i int) {
-	s.Send(&timing{Name: name, Value: i})
+func (s Broker) Timing(name string, value int) {
+	s.Send(&timing{Name: name, Value: value})
 }
 
 //TimingDuration sends a timing value for the duration provided

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	ddStatsd "github.com/DataDog/datadog-go/statsd"
 	"github.com/MediaMath/govent/graphite"
 	"gopkg.in/alexcesaro/statsd.v2"
 
@@ -17,6 +18,7 @@ type key int
 const (
 	prefixKey key = iota
 	statsdURLKey
+	ddStatsdURLKey
 	runtimeIntervalKey
 	graphiteURLKey
 	graphiteUserKey
@@ -37,6 +39,11 @@ func GetPrefix(ctx context.Context) string {
 //SetStatsdURL sets the stats prefix
 func SetStatsdURL(ctx context.Context, url string) context.Context {
 	return context.WithValue(ctx, statsdURLKey, url)
+}
+
+//SetDatadogURL sets the datadog statsd URL
+func SetDatadogURL(ctx context.Context, url string) context.Context {
+	return context.WithValue(ctx, ddStatsdURLKey, url)
 }
 
 //SetGraphite sets the graphite client
@@ -96,6 +103,18 @@ func RegisterStatsContext(ctx context.Context) error {
 
 		log.Printf("Starting graphite %v %v", govent.Username, govent.Addr)
 		DefaultBroker.RegisterEndpoint(GraphiteEndpoint(govent))
+	}
+
+	ddStatsdURL := getString(ctx, ddStatsdURLKey, "")
+	if ddStatsdURL != "" {
+		log.Printf("Register datadog statsd: %v %v", ddStatsdURL, prefix)
+		c, err := ddStatsd.New(ddStatsdURL)
+		if err != nil {
+			return err
+		}
+		c.Namespace = prefix
+
+		DefaultBroker.RegisterEndpoint(DatadogStatsdEndpoint(c))
 	}
 
 	return nil
