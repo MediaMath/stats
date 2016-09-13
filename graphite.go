@@ -14,10 +14,12 @@ import (
 func GraphiteEndpoint(govent *graphite.Graphite) Endpoint {
 	return func(data <-chan interface{}) {
 		for d := range data {
-			event, is := d.(event)
+			event, is := d.(*event)
 			if is {
 				err := govent.Publish(event.inner)
-				log.Printf("Error publishing %v to graphite: %v", d, err)
+				if err != nil {
+					log.Printf("Error publishing %v to graphite: %v", d, err)
+				}
 			}
 		}
 	}
