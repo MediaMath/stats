@@ -131,6 +131,10 @@ func RegisterRuntimeStatsContext(ctx context.Context) error {
 		return fmt.Errorf("No runtime interval not reporting runtime stats")
 	}
 
+	if interval < time.Second {
+		return fmt.Errorf("Runtime stats interval is too short %v", interval)
+	}
+
 	return ReportRuntimeStats(ctx, interval)
 }
 
