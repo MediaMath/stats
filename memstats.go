@@ -22,6 +22,10 @@ func ReportRuntimeStats(ctx context.Context, sleep time.Duration) error {
 		return fmt.Errorf("runtime stats are already running")
 	}
 
+	if sleep < time.Second {
+		return fmt.Errorf("must sleep at least 1 second")
+	}
+
 	log.Printf("Updating runtime stats every: %v", sleep)
 	go sendMemStats(ctx, sleep)
 	return nil
