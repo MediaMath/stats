@@ -15,6 +15,8 @@ func StatsdEndpoint(s *statsd.Client) Endpoint {
 				s.Count(t.Name, t.Value)
 			case *gauge:
 				s.Gauge(t.Name, t.Value)
+			case *biggauge:
+				s.Gauge(t.Name, t.Value)
 			case *timing:
 				s.Timing(t.Name, t.Value)
 			default:

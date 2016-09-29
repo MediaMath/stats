@@ -36,6 +36,15 @@ func (g *gauge) String() string {
 	return fmt.Sprintf("%v|%v|g", g.Name, g.Value)
 }
 
+type biggauge struct {
+	Name  string
+	Value uint64
+}
+
+func (g *biggauge) String() string {
+	return fmt.Sprintf("%v|%v|g", g.Name, g.Value)
+}
+
 type timing struct {
 	Name  string
 	Value int
