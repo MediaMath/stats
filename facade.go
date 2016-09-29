@@ -59,6 +59,11 @@ func Off(name string) {
 	DefaultBroker.Off(name)
 }
 
+//BigGauge sends a big gauge value for the given name
+func BigGauge(name string, i uint64) {
+	DefaultBroker.BigGauge(name, i)
+}
+
 //Gauge sends a gauge value for the given name
 func Gauge(name string, i int) {
 	DefaultBroker.Gauge(name, i)

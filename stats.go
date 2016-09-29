@@ -125,6 +125,11 @@ func (s Broker) Incr(name string) {
 	s.Count(name, 1)
 }
 
+//BigGauge sends a very big guage value for the given name
+func (s Broker) BigGauge(name string, value uint64) {
+	s.Send(&biggauge{Name: name, Value: value})
+}
+
 //Gauge sends a gauge value for the given name
 func (s Broker) Gauge(name string, value int) {
 	s.Send(&gauge{Name: name, Value: value})
