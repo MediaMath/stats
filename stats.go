@@ -1,3 +1,12 @@
+/*
+Package stats provides a facade around push based stats instrumentation.  It allows you to put simple instrumentation calls in your code:
+	stats.Incr("get_request")
+Then you can turn this off, change where the stats go, etc at startup time.
+
+The basic architecture of the stats package has the concept of Brokers, Endpoints and producers.  Producers send a stat to a broker which then multiplexes the stats to all registered endpoints.
+
+If no Broker reference is used the DefaultBroker is used, it is started at initialization time.
+*/
 package stats
 
 //Copyright 2016 MediaMath <http://www.mediamath.com>.  All rights reserved.

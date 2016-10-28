@@ -73,7 +73,7 @@ func HasStats(ctx context.Context) (hasStatsdURL bool, hasGraphiteURL bool) {
 	return statsdURL != "", graphiteURL != ""
 }
 
-//RegisterStatsContext starts statsd and graphite based on the context
+//RegisterStatsContext starts endpoints based on what is set in the context
 func RegisterStatsContext(ctx context.Context) error {
 	prefix := GetPrefix(ctx)
 	if prefix == "" {
