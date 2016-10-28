@@ -1,5 +1,5 @@
 ## stats - a stats facade for golang 
-![GoDoc](https://godoc.org/github.com/MediaMath/stats?status.png)](https://godoc.org/github.com/MediaMath/stats)
+[![GoDoc](https://godoc.org/github.com/MediaMath/stats?status.png)](https://godoc.org/github.com/MediaMath/stats)
 
 Package stats provides a facade around push based stats instrumentation.  It allows you to put simple instrumentation calls in your code:
 
