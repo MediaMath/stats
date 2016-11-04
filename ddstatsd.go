@@ -5,6 +5,7 @@ package stats
 //license that can be found in the LICENSE file.
 
 import (
+	"strings"
 	"time"
 
 	ddStatsd "github.com/DataDog/datadog-go/statsd"
@@ -22,7 +23,7 @@ func DatadogStatsdEndpoint(s *ddStatsd.Client) Endpoint {
 			case *timing:
 				s.Timing(t.Name, time.Duration(t.Value), nil, 1)
 			case *event:
-				s.SimpleEvent(t.inner.Tags, t.inner.Data)
+				s.SimpleEvent(strings.Join(t.inner.Tags, ","), t.inner.Data)
 			default:
 			}
 		}
