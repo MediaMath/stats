@@ -14,7 +14,7 @@ import (
 	"github.com/MediaMath/govent/graphite"
 	"gopkg.in/alexcesaro/statsd.v2"
 
-	"golang.org/x/net/context"
+	"context"
 )
 
 type key int

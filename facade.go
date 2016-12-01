@@ -7,7 +7,7 @@ package stats
 import (
 	"time"
 
-	"golang.org/x/net/context"
+	"context"
 
 	"github.com/MediaMath/govent/graphite"
 )
