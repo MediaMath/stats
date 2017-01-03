@@ -81,7 +81,9 @@ func sendMemStats(ctx context.Context, sleep time.Duration) {
 			if lastNumGc > 0 {
 				diff := countGc
 				diffTime := now.Sub(lastSampleTime).Seconds()
-				Gauge("memory.gc.gcs_per_second", diff/int(diffTime))
+				if diffTime > 0 {
+					Gauge("memory.gc.gcs_per_second", diff/int(diffTime))
+				}
 			}
 
 			if countGc > 0 {
