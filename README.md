@@ -1,3 +1,5 @@
+# [stats](https://github.com/MediaMath/stats) &middot; [![CircleCI Status](https://circleci.com/gh/MediaMath/stats.svg?style=shield)](https://circleci.com/gh/MediaMath/stats) [![GitHub license](https://img.shields.io/badge/license-BSD3-blue.svg)](https://github.com/MediaMath/stats/blob/master/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/MediaMath/stats/blob/master/CONTRIBUTING.md)
+
 ## stats - a stats facade for golang 
 [![GoDoc](https://godoc.org/github.com/MediaMath/stats?status.png)](https://godoc.org/github.com/MediaMath/stats)
 
